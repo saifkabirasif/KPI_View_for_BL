@@ -1,0 +1,14 @@
+base
+devtools
+httr
+rjson
+httpuv
+Rfacebook
+proto
+gsubfn
+DBI
+RSQLite
+sqldf
+slidify
+ggplot2
+googleVis

@@ -1,0 +1,121 @@
+---
+title       : KPI Analysis
+subtitle    : A Dive into Next Gen Representation
+author      : Md. Saif Kabir Asif
+job         : Specialist, Mobile Broadband Evolution, Robi Axiata Limited
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax, quiz, bootstrap]  # {mathjax, quiz,bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+assets      : {assets: ../../assets}
+
+---
+
+## Old School Visualization
+
+```{r,fig.height = 7, echo=FALSE,fig.width = 10, fig.align = 'center', message=FALSE, cache=FALSE}
+datafile<-read.csv("Data_RNC.csv",header=TRUE) # Change Million/thousands comma while importing indicator
+datafile[,c(3:39)]<-sapply(datafile[,c(3:39)], as.double)
+#View(datafile)
+#sapply(datafile, class) # Check data types
+
+datafile$Date<-as.Date(datafile$Date,format="%d-%m-%Y")
+
+datafile$RNC<-as.character(datafile$RNC)
+
+library(ggplot2)
+ggplot(data=datafile,aes(x=Date,y=datafile$Traffic_HSDPA/1024/1024))+
+  geom_line(aes(color=RNC))+
+  ggtitle("HSDPA Traffic Volume (TB)")+
+  labs(x="Date",y="HSDPA_Traffic_TB")
+
+
+
+
+```
+
+--- .class #id 
+
+## Next Generation Visualization: Motion Charts
+
+```{r,results = 'asis', echo=FALSE, warning=FALSE, message=FALSE, fig.align='center'}
+
+library(googleVis)
+M1 <- gvisMotionChart(datafile,idvar ="RNC",timevar ="Date",options = list(width=850,height=450) )
+#sapply(datafile, class)
+#View(datafile)
+#plot(M1)
+M1$html$footer<-NULL
+M1$html$jsfooter<-NULL
+M1$html$caption<-NULL
+
+print(M1,file="assets/widgets/temp.html") # Save Output as html
+cat('<iframe src="./assets/widgets/temp.html" width=100% height=125% allowtransparency="true"> </iframe>') # Embed Htmls
+```
+
+--- .class #id 
+
+
+## Line Chart : Next Level
+
+```{r,results = 'asis', echo=FALSE, warning=FALSE, message=FALSE, fig.align='center'}
+library(sqldf)
+
+df_CRE04<-sqldf("select Date,Traffic_HSDPA from datafile where RNC='RNC04'")
+df_CRE06<-sqldf("select Date,Traffic_HSDPA from datafile where RNC='RNC06'")
+
+df_Combi<- sqldf("select df_CRE04.Date as Date,
+                 df_CRE04.Traffic_HSDPA as CRE04,
+                 df_CRE06.Traffic_HSDPA as CRE06 
+                 from df_CRE04 left outer join df_CRE06 
+                 on df_CRE04.Date=df_CRE06.Date
+                 order by 1")
+  
+df<-data.frame(Date=df_Combi$Date,
+                  RNC04=df_Combi$CRE04/1024/1024,
+                  RNC06=df_Combi$CRE06/1024/1024
+                  )
+
+M2<- gvisLineChart(data = df,xvar = "Date",
+                     yvar = c("RNC04","RNC06"),
+                     options=list(
+                       title="HSDPA Traffic Volume(TB)",
+                       hAxis="{title: 'Date',
+                               showTextEvery: 1,
+                               slantedText:true
+  
+                       }",
+                       vAxis="{title: 'HSDPA Traffic Volume(TB)'}",
+                       legend="{positon: 'Right'
+                       }",
+                       curveType="function", 
+                       haxis="{format: 'M d Y'}",
+                       explorer="{action:['dragToZoom','rightClickToReset'],
+                                  maxZoomIn: 0.05,
+                                  axis: 'horizontal',
+                                  keepInBounds: true}",
+                       crosshair="{trigger:'both'}",
+                       curvetype='fucntion',
+                       backgroundColor="",
+                       legend="{position:'top'}",
+                       width=900, height=450
+                       )
+  )
+
+M2$html$footer<-NULL
+M2$html$jsfooter<-NULL
+M2$html$caption<-NULL
+
+#plot(M2)
+
+print(M2,file="assets/widgets/temp1.html") # Save Output as html
+cat('<iframe src="./assets/widgets/temp1.html" width=100% height=125% allowtransparency="true"> </iframe>') # Embed Htmls
+
+                   
+```
+
+--- .segue bg:grey # Set Background as Grey
+
+# Thank You
